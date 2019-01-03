@@ -152,6 +152,21 @@ void separateChannels(const uchar4* const inputImageRGBA,
   // {
   //     return;
   // }
+
+  const int2 thread_2D_pos = make_int2(blockIdx.x * blockDim.x + threadIdx.x,
+                                       blockIdx.y * blockDim.y + threadIdx.y);
+
+  const int thread_1D_pos = thread_2D_pos.y * numCols + thread_2D_pos.x;
+  
+  if (thread_2D_pos.x >= numCols || thread_2D_pos.y >= numRows) {
+    return;
+  }
+
+  uchar4 rgba = inputImageRGBA[thread_1D_pos];
+  redChannel[thread_1D_pos] = rgba.x;
+  greenChannel[thread_1D_pos] = rgba.y;
+  blueChannel[thread_1D_pos] = rgba.z;
+  printf("%i - <%i %i %i>\n", thread_1D_pos, redChannel[thread_1D_pos], greenChannel[thread_1D_pos], blueChannel[thread_1D_pos]);
 }
 
 //This kernel takes in three color channels and recombines them
@@ -221,14 +236,27 @@ void your_gaussian_blur(const uchar4 * const h_inputImageRGBA, uchar4 * const d_
                         const int filterWidth)
 {
   //TODO: Set reasonable block size (i.e., number of threads per block)
-  const dim3 blockSize;
+  const dim3 blockSize(16, 16);
 
   //TODO:
   //Compute correct grid size (i.e., number of blocks per kernel launch)
   //from the image size and and block size.
-  const dim3 gridSize;
+  const dim3 gridSize( (numCols / blockSize.x) + 1, (numRows / blockSize.y) + 1 );
+  printf("grid size - (%i, %i)", gridSize.x, gridSize.y);
 
   //TODO: Launch a kernel for separating the RGBA image into different color channels
+  // unsigned char *d_red   = new unsigned char[numRows * numCols];
+  // unsigned char *d_blue  = new unsigned char[numRows * numCols];
+  // unsigned char *d_green = new unsigned char[numRows * numCols];
+  // checkCudaErrors(cudaMalloc(&d_red, sizeof(unsigned char) * numRows * numCols));
+  // checkCudaErrors(cudaMalloc(&d_blue, sizeof(unsigned char) * numRows * numCols));
+  // checkCudaErrors(cudaMalloc(&d_green, sizeof(unsigned char) * numRows * numCols));
+  separateChannels<<<gridSize, blockSize>>>(d_inputImageRGBA,
+                                            numRows,
+                                            numCols,
+                                            d_red,
+                                            d_green,
+                                            d_blue);
 
   // Call cudaDeviceSynchronize(), then call checkCudaErrors() immediately after
   // launching your kernel to make sure that you didn't make any mistakes.
