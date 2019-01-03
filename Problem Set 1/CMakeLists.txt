@@ -5,13 +5,11 @@
 # <email>   quantm@unist.ac.kr  kast.jo@googlemail.com msarahan@gmail.com</email>
 ############################################################################
 cmake_minimum_required(VERSION 3.3)
-project(Problem1)
+project(greyscale LANGUAGES CXX CUDA)
 
 # collect source files
-
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
-
 file( GLOB  hdr *.hpp *.h )
 file( GLOB  cu  *.cu)
 SET (HW1_files main.cpp reference_calc.cpp compare.cpp)
